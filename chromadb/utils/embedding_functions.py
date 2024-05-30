@@ -240,12 +240,18 @@ class CohereEmbeddingFunction(EmbeddingFunction[Documents]):
 
     def __call__(self, input: Documents) -> Embeddings:
         # Call Cohere Embedding API for each document.
-        return [
-            embeddings
-            for embeddings in self._client.embed(
-                texts=input, model=self._model_name, input_type="search_document"
-            )
-        ]
+        cohere_output = self._client.embed(
+            texts=input, model=self._model_name, input_type="search_document"
+        )
+        if "embeddings" in dir(cohere_output):
+            return cohere_output.embeddings # type: ignore
+        else:
+            return [
+                embeddings[1]
+                for embeddings in self._client.embed(
+                    texts=input, model=self._model_name, input_type="search_document"
+                )
+            ][1]
 
 
 class HuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):
